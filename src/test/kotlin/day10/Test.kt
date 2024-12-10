@@ -12,6 +12,7 @@ class Test {
         45678903
         32019012
         01329801
+        10456732
         """.trimIndent().lines()
 
     @Test

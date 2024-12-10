@@ -3,16 +3,18 @@ package day10
 import util.CharacterBoard
 
 class HikingMap(
-    val heights: CharacterBoard
+    private val heights: CharacterBoard
 ) {
-    fun trailheadScoreCount(): Int = heights.allTiles.sumOf(::trailheadScore)
+    fun trailheadScoreCount(): Int = heights.allTiles.map(::trails)
+        .sumOf(List<List<CharacterBoard.Tile>>::size)
 
-    private fun trailheadScore(tile: CharacterBoard.Tile): Int = routesToTop(tile, 0)
+    private fun trails(tile: CharacterBoard.Tile): List<List<CharacterBoard.Tile>> = trails(listOf(tile), 0)
+        .distinctBy { it.last() }
 
-    private fun routesToTop(tile: CharacterBoard.Tile, height: Int): Int =
-        if (tile.content.digitToInt() != height) 0
-        else if (tile.content.digitToInt() == 9) 1
-        else heights.directlyAdjacent(tile.coords).sumOf { routesToTop(it, height + 1) }
+    private fun trails(path: List<CharacterBoard.Tile>, height: Int): List<List<CharacterBoard.Tile>> =
+        if (!path.last().content.isDigit() || height != path.last().content.digitToInt()) emptyList()
+        else if (height == 9) listOf(path)
+        else heights.directlyAdjacent(path.last().coords).flatMap { trails(path.plus(it), height + 1) }
 
     companion object {
         fun parse(lines: List<String>): HikingMap = HikingMap(CharacterBoard.parse(lines))
