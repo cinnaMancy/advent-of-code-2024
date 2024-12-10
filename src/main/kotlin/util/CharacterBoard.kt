@@ -10,9 +10,7 @@ class CharacterBoard(
         else null
 
     fun directlyAdjacent(coords: Coordinate): Collection<Tile> = (-1..1 step 2).flatMap { dx ->
-        (-1..1 step 2)
-            .filter { dy -> !(dx == 0 && dy == 0) }
-            .map { dy -> get(coords + Coordinate(dx, dy)) }
+        (-1..1 step 2).map { dy -> get(coords + Coordinate(dx, dy)) }
     }.filterNotNull()
 
     companion object {
