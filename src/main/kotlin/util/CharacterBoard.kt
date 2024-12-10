@@ -15,9 +15,7 @@ class CharacterBoard(
 
     companion object {
         fun parse(lines: List<String>): CharacterBoard = CharacterBoard(lines.reversed().mapIndexed { iY, y ->
-            y.mapIndexed { iX, x ->
-                Tile(Coordinate(iX, iY), x)
-            }
+            y.mapIndexed { iX, x -> Tile(Coordinate(iX, iY), x) }
         })
     }
 
