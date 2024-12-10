@@ -5,15 +5,16 @@ import util.CharacterBoard
 class HikingMap(
     val heights: CharacterBoard
 ) {
-    fun trailheadsCount(): Int = heights.allTiles.sumOf(::trailheadScore)
+    fun trailheadScoreCount(): Int = heights.allTiles.sumOf(::trailheadScore)
 
-//    private fun trailheadScore(tile: CharacterBoard.Tile): Int = generateSequence(tile) { currentTile ->
-//        heights.directlyAdjacent(currentTile.coords).any { nextTile ->
-//            nextTile.content.digitToInt() == currentTile.content.digitToInt() + 1
-//        }
-//    }
+    private fun trailheadScore(tile: CharacterBoard.Tile): Int = routesToTop(tile, 0)
 
-    private fun trailheadScore(tile: CharacterBoard.Tile): Int = TODO()
+    private fun routesToTop(tile: CharacterBoard.Tile, height: Int): Int =
+        if (tile.content.digitToInt() != height) 0
+        else if (tile.content.digitToInt() == 9) 1
+        else heights.directlyAdjacent(tile.coords).sumOf { routesToTop(it, height + 1) }
 
-    private fun searchTrails(tile: CharacterBoard.Tile, Int): List<List<CharacterBoard.Tile>> = TODO()
+    companion object {
+        fun parse(lines: List<String>): HikingMap = HikingMap(CharacterBoard.parse(lines))
+    }
 }
