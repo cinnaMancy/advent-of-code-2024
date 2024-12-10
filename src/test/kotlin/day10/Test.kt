@@ -21,4 +21,11 @@ class Test {
         val trailheadScoreCount = hikingMap.trailheadScoreCount()
         assertEquals(36, trailheadScoreCount)
     }
+
+    @Test
+    fun part2Example() {
+        val hikingMap = HikingMap.parse(input)
+        val ratingScoreCount = hikingMap.ratingScoreCount()
+        assertEquals(81, ratingScoreCount)
+    }
 }

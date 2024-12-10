@@ -5,11 +5,18 @@ import util.CharacterBoard
 class HikingMap(
     private val heights: CharacterBoard
 ) {
-    fun trailheadScoreCount(): Int = heights.allTiles.map(::trails)
-        .sumOf(List<List<CharacterBoard.Tile>>::size)
+    fun trailheadScoreCount(): Int = allTrails()
+        .distinctBy { Pair(it.first(), it.last()) }
+        .size
+
+    fun ratingScoreCount(): Int = allTrails()
+        .size
+
+    private fun allTrails(): List<List<CharacterBoard.Tile>> = heights.allTiles
+        .flatMap(::trails)
+        .filter(List<CharacterBoard.Tile>::isNotEmpty)
 
     private fun trails(tile: CharacterBoard.Tile): List<List<CharacterBoard.Tile>> = trails(listOf(tile), 0)
-        .distinctBy { it.last() }
 
     private fun trails(path: List<CharacterBoard.Tile>, height: Int): List<List<CharacterBoard.Tile>> =
         if (!path.last().content.isDigit() || height != path.last().content.digitToInt()) emptyList()
