@@ -1,37 +1,30 @@
 package day11
 
 class StoneLine(
-    private val stones: List<Stone>
+    private val stones: List<Long>
 ) {
-    fun stonesCountAfterEvolutions(times: Int): Int = stones.sumOf { it.evolve(times).size }
+    fun stonesCountAfterEvolutions(times: Int): Int = stones.sumOf { evolve(it, times).size }
 
+    private fun evolve(stone: Long, times: Int): List<Long> {
+        if (times == 0) return listOf(stone)
 
-    companion object {
-        fun parse(text: String): StoneLine = StoneLine(text.split(" ").map(String::toLong).map(::Stone))
+        val memo = evolutionsMemo[Pair(stone, times)]
+        if (memo != null) return memo
+
+        val nextElements =
+            if (stone == 0L) listOf(1L)
+            else if (stone.toString().length % 2 == 0)
+                stone.toString().chunked(stone.toString().length / 2).map(String::toLong)
+            else listOf(2024 * stone)
+
+        val nextResults = nextElements.flatMap { evolve(it, times - 1) }
+        evolutionsMemo[Pair(stone, times)] = nextResults
+        return nextResults
     }
 
-    data class Stone(
-        val content: Long
-    ) {
-        fun evolve(times: Int): List<Stone> {
-            if (times == 0) return listOf(this)
+    companion object {
+        val evolutionsMemo = mutableMapOf<Pair<Long, Int>, List<Long>>()
 
-            val memo = evolutionsMemo[Pair(this, times)]
-            if (memo != null) return memo
-
-            val nextElements =
-                if (content == 0L) listOf(Stone(1))
-                else if (content.toString().length % 2 == 0)
-                    content.toString().chunked(content.toString().length / 2).map(String::toLong).map(::Stone)
-                else listOf(Stone(2024 * content))
-            
-            val nextResults = nextElements.flatMap { it.evolve(times - 1) }
-            evolutionsMemo[Pair(this, times)] = nextResults
-            return nextResults
-        }
-
-        companion object {
-            val evolutionsMemo = mutableMapOf<Pair<Stone, Int>, List<Stone>>()
-        }
+        fun parse(text: String): StoneLine = StoneLine(text.split(" ").map(String::toLong))
     }
 }
