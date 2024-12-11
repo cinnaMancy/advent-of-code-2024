@@ -17,18 +17,9 @@ class StoneLine(
         val content: Long
     ) {
         fun evolve(): List<Stone> =
-            if (evolutionCache.contains(content)) evolutionCache[content]!!
-            else {
-                val result = if (content == 0L) listOf(Stone(1))
-                else if (content.toString().length % 2 == 0)
-                    content.toString().chunked(content.toString().length / 2).map(String::toLong).map(::Stone)
-                else listOf(Stone(2024 * content))
-                evolutionCache[content] = result
-                result
-            }
-
-        companion object {
-            val evolutionCache = mutableMapOf<Long, List<Stone>>()
-        }
+            if (content == 0L) listOf(Stone(1))
+            else if (content.toString().length % 2 == 0)
+                content.toString().chunked(content.toString().length / 2).map(String::toLong).map(::Stone)
+            else listOf(Stone(2024 * content))
     }
 }
