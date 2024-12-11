@@ -3,7 +3,7 @@ package day11
 class StoneLine(
     private val stones: List<Stone>
 ) {
-    fun stonesCountAfter25Evolutions(): Int = (1..25).fold(stones) { it, x -> evolve(it).also { print(x) } }.size
+    fun stonesCountAfter25Evolutions(): Int = (1..25).fold(stones) { it, _ -> evolve(it) }.size
 
     fun stonesCountAfter75Evolutions(): Int = TODO()
 
