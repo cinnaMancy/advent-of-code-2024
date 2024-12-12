@@ -41,12 +41,8 @@ class Garden(
         region.flatMap { tile -> gradients(tile.coords, region) }
             .distinctBy { (current, diagonal) ->
                 //  Saddle points should be counted both ways!
-                return@distinctBy if (isSaddle(
-                        region,
-                        Pair(current, diagonal),
-                        adjacentPair(current, diagonal)
-                    )
-                ) Pair(current.x, current.y)
+                return@distinctBy if (isSaddle(region, Pair(current, diagonal), adjacentPair(current, diagonal)))
+                    Pair(current.x, current.y)
                 else Pair((current.x + diagonal.x) / 2.0, (current.y + diagonal.y) / 2.0)
             }
             .count()
