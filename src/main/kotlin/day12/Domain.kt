@@ -32,15 +32,14 @@ class Garden(
 
     private fun area(region: List<CharacterBoard.Tile>): Int = region.size
 
-    private fun perimeter(region: List<CharacterBoard.Tile>): Int = groupedAdjacent(region).sumOf { 4 - it.size }
-
-    private fun groupedAdjacent(region: List<CharacterBoard.Tile>) =
+    private fun perimeter(region: List<CharacterBoard.Tile>): Int =
         region.map { tile -> board.directlyAdjacent(tile.coords).filter { adjacent -> region.contains(adjacent) } }
+            .sumOf { 4 - it.size }
 
     private fun corners(region: List<CharacterBoard.Tile>): Int =
         region.flatMap { tile -> gradients(tile.coords, region) }
             .distinctBy { (current, diagonal) ->
-                //  Saddle points should be counted both ways!
+                //  Saddle points should be counted twice!
                 return@distinctBy if (isSaddle(region, Pair(current, diagonal), adjacentPair(current, diagonal)))
                     Pair(current.x, current.y)
                 else Pair((current.x + diagonal.x) / 2.0, (current.y + diagonal.y) / 2.0)
@@ -55,15 +54,6 @@ class Garden(
         CharacterBoard.Coordinate(diagonal.x, current.y)
     )
 
-    //  C D
-    //  A B where   A is the current tile being checked for corners,
-    //              D is a single diagonal  A corner exists in a diagonal direction D (4 of these for one point),
-    //              C and D are the two adjacent tiles to common to both A and D.
-    //  The function returns pairs of A to D, a maximum of 4 per call.
-    //  A corner exists, when
-    //  ((A == B) != (C == B)) || (A && B && !C && !D)
-    //  The first part looks for gradients. The part after the || is for saddle points.
-    //  These corners may also be picked up as B, C pairs! Also care for saddle points!
     private fun gradients(
         current: CharacterBoard.Coordinate,
         region: List<CharacterBoard.Tile>
@@ -80,6 +70,15 @@ class Garden(
         }.map { it.first }
     }
 
+    //  C D
+    //  A B where   A is the current tile being checked for corners,
+    //              D is a single diagonal  A corner exists in a diagonal direction D (4 of these for one point),
+    //              C and D are the two adjacent tiles to common to both A and D.
+    //  A corner exists, when
+    //  ((A == B) != (C == B))
+    //  This looks for gradients. Just trust me bro, it works.
+    //  These corners will also be picked up as B, C pairs, so take care in finding the unique ones!
+    //  Also, this doesn't include saddle points!
     private fun isGradient(
         region: List<CharacterBoard.Tile>,
         currentAndDiagonal: Pair<CharacterBoard.Coordinate, CharacterBoard.Coordinate>,
@@ -87,6 +86,13 @@ class Garden(
     ) = ((currentAndDiagonal.first.isPartOf(region) == currentAndDiagonal.second.isPartOf(region))
             != (twoAdjacent.first.isPartOf(region) == twoAdjacent.second.isPartOf(region)))
 
+    //  C D
+    //  A B where   A is the current tile being checked for corners,
+    //              D is a single diagonal  A corner exists in a diagonal direction D (4 of these for one point),
+    //              C and D are the two adjacent tiles to common to both A and D.
+    //  A saddle point exists when
+    //  (A && D && !C && !B)
+    //  These points will have to be counted twice unlike regular gradient points!
     private fun isSaddle(
         region: List<CharacterBoard.Tile>,
         currentAndDiagonal: Pair<CharacterBoard.Coordinate, CharacterBoard.Coordinate>,
