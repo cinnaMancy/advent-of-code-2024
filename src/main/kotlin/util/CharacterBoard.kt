@@ -9,12 +9,18 @@ class CharacterBoard(
         if (coords.y in tiles.indices && coords.x in tiles[0].indices) tiles[coords.y][coords.x]
         else null
 
-    fun adjacent(coords: Coordinate): Collection<Tile> = (-1..1).flatMap { dx ->
-        (-1..1).filter { dy -> !(dx == 0 && dy == 0) }.map { dy -> this[coords + Coordinate(dx, dy)] }
-    }.filterNotNull()
+    fun adjacentCoordinates(coords: Coordinate): Collection<Coordinate> = (-1..1).flatMap { dx ->
+        (-1..1).filter { dy -> !(dx == 0 && dy == 0) }.map { dy -> coords + Coordinate(dx, dy) }
+    }
+
+    fun adjacent(coords: Coordinate): Collection<Tile> =
+        adjacentCoordinates(coords).mapNotNull(::get)
+
+    fun directlyAdjacentCoordinates(coords: Coordinate): Collection<Coordinate> =
+        adjacentCoordinates(coords).filter { (it.x - coords.x) * (it.y - coords.y) == 0 }
 
     fun directlyAdjacent(coords: Coordinate): Collection<Tile> =
-        adjacent(coords).filter { (it.coords.x - coords.x) * (it.coords.y - coords.y) == 0 }
+        directlyAdjacentCoordinates(coords).mapNotNull(::get)
 
     companion object {
         fun parse(lines: List<String>): CharacterBoard = CharacterBoard(lines.reversed().mapIndexed { iY, y ->
