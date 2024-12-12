@@ -37,7 +37,7 @@ class Garden(
             .sumOf { 4 - it.size }
 
     private fun corners(region: List<CharacterBoard.Tile>): Int =
-        region.flatMap { tile -> gradients(tile.coords, region) }
+        region.flatMap { tile -> gradientsAndSaddles(tile.coords, region) }
             .distinctBy { (current, diagonal) ->
                 //  Saddle points should be counted twice!
                 return@distinctBy if (isSaddle(region, Pair(current, diagonal), adjacentPair(current, diagonal)))
@@ -54,7 +54,7 @@ class Garden(
         CharacterBoard.Coordinate(diagonal.x, current.y)
     )
 
-    private fun gradients(
+    private fun gradientsAndSaddles(
         current: CharacterBoard.Coordinate,
         region: List<CharacterBoard.Tile>
     ): List<Pair<CharacterBoard.Coordinate, CharacterBoard.Coordinate>> {
