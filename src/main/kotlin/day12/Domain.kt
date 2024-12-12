@@ -70,8 +70,8 @@ class Garden(
         }.map { it.first }
     }
 
-    //  C D
-    //  A B where   A is the current tile being checked for corners,
+    //  A B
+    //  C D where   A is the current tile being checked for corners,
     //              D is a single diagonal  A corner exists in a diagonal direction D (4 of these for one point),
     //              C and D are the two adjacent tiles to common to both A and D.
     //  A corner exists, when
@@ -86,8 +86,8 @@ class Garden(
     ) = ((currentAndDiagonal.first.isPartOf(region) == currentAndDiagonal.second.isPartOf(region))
             != (twoAdjacent.first.isPartOf(region) == twoAdjacent.second.isPartOf(region)))
 
-    //  C D
-    //  A B where   A is the current tile being checked for corners,
+    //  A B
+    //  C D where   A is the current tile being checked for corners,
     //              D is a single diagonal  A corner exists in a diagonal direction D (4 of these for one point),
     //              C and D are the two adjacent tiles to common to both A and D.
     //  A saddle point exists when
