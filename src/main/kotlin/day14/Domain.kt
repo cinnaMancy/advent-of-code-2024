@@ -8,13 +8,17 @@ class Bathroom(
 ) {
     fun safetyFactorAfter(steps: Int): Int = quadrantCounts(positionsAfter(steps))
 
-    fun findFirstChristmasTree(): Int = generateSequence(1) { it + 1 }
-        .filter {
-            positionsAfter(it).let { positions ->
-                positions.any { current -> isLineInDirection(Pair(0, 1), 12, current, positions) }
-            }
+    fun findFirstChristmasTree(): Int = generateSequence(0) { it + 1 }
+        .map { positionsAfter(it) }
+        .withIndex()
+        .filter { (_, positions) ->
+            positions.any { current -> formsLineToward(Pair(0, 1), 12, current, positions) }
         }
-        .onEach { draw(it, positionsAfter(it)) }
+        .onEach { (index, positions) ->
+            println("Iteration $index:")
+            draw(positions)
+        }
+        .map { it.index }
         .first()
 
     private fun quadrantCounts(positions: List<Pair<Int, Int>>): Int =
@@ -25,8 +29,7 @@ class Bathroom(
             .map { it.value.size }
             .fold(1) { one, other -> one * other }
 
-    private fun draw(index: Int, positions: List<Pair<Int, Int>>): Unit {
-        println("Iteration $index:")
+    private fun draw(positions: List<Pair<Int, Int>>): Unit {
         (0..<dimensions.first).forEach { x ->
             (0..<dimensions.second).forEach { y ->
                 val robotsCount = positions.count { it == Pair(x, y) }
@@ -37,12 +40,12 @@ class Bathroom(
         }
     }
 
-    private fun isLineInDirection(
+    private fun formsLineToward(
         direction: Pair<Int, Int>, length: Int, current: Pair<Int, Int>, positions: List<Pair<Int, Int>>
     ): Boolean =
         if (length == 0) true
         else positions.any { positions.contains(current) }
-                && isLineInDirection(direction, length - 1, current + direction, positions)
+                && formsLineToward(direction, length - 1, current + direction, positions)
 
     fun quadrant(position: Pair<Int, Int>): Pair<Int, Int>? {
         val xSize = dimensions.first / 2
