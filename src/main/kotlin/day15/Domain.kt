@@ -20,7 +20,7 @@ class Warehouse(
     private fun performNextMove(): Warehouse? {
         val direction = movements.firstOrNull()?.vector ?: return null
         val robot = board.allTiles.first { it.content == '@' }.coords
-        val nextBoard = SwapAttempt(robot, direction).perform(board)
+        val nextBoard = PushAttempt(listOf(robot), direction).push(board)
         return Warehouse(nextBoard, movements.drop(1))
     }
 
@@ -53,41 +53,65 @@ class Warehouse(
     }
 }
 
-class SwapAttempt(
-    val base: CharacterBoard.Coordinate,
+class PushAttempt(
+    val group: List<CharacterBoard.Coordinate>,
     val vector: CharacterBoard.Coordinate
 ) {
-    private val target: CharacterBoard.Coordinate = base + vector
+    //  TODO: Validate if correct
+    //   1. if !possible() return board
+    //   2. push all non-fully-space subgroups
+    //   3. move self
+    fun push(board: CharacterBoard): CharacterBoard {
+        if (!possible(board)) return board
+        val subGroups = groupsAhead(board)
+        val spaces = subGroups.filter { nextGroup -> allSpaces(nextGroup, board) }
+        val complexSubGroups = subGroups.minus(spaces)
+        val afterSubgroupsMoved = complexSubGroups.fold(board) { currentBoard, currentGroup ->
+            PushAttempt(currentGroup, vector).push(currentBoard)
+        }
+        return move(this.group, afterSubgroupsMoved)
+    }
 
-    fun perform(board: CharacterBoard): CharacterBoard = if (possibleWhole(board)) swap(board) else board
+    //  TODO: Validate if correct
+    //   1. select the front of each swap and map it to a (second level) list of tiles present that move simultaneously (itself, or itself and a neighbor)
+    //   2 if this list contains any '#', return false
+    //   3 if this list is contains only '.', return true
+    //   4 take all other elements than '#' and '.' and map if they all possible()
+    private fun possible(board: CharacterBoard): Boolean {
+        val subGroups = groupsAhead(board)
+        val walls = subGroups.filter { subGroup -> anyWalls(subGroup, board) }
+        val spaces = subGroups.filter { subGroup -> allSpaces(subGroup, board) }
+        val pushables = subGroups.minus(walls).minus(spaces)
+        return when {
+            walls.isNotEmpty() -> false
+            pushables.isEmpty() -> true
+            else -> pushables.all { PushAttempt(it, vector).possible(board) }
+        }
+    }
 
-    private fun swap(board: CharacterBoard): CharacterBoard {
-        val actedBoard =
-            if (possibleInPlace(board)) board
-            else children(board).fold(board) { childBoard, childSwap ->
-                childSwap.swap(childBoard)
+    private fun allSpaces(coordinates: List<CharacterBoard.Coordinate>, board: CharacterBoard): Boolean =
+        coordinates.all { coordinate -> board[coordinate]?.content == '.' }
+
+    private fun anyWalls(coordinates: List<CharacterBoard.Coordinate>, board: CharacterBoard): Boolean =
+        coordinates.any { coordinate -> board[coordinate]?.content == '#' }
+
+    private fun move(group: List<CharacterBoard.Coordinate>, board: CharacterBoard): CharacterBoard =
+        group.fold(board) { currentBoard, cell ->
+            currentBoard.swap(cell, cell + vector)
+        }
+
+    private fun groupsAhead(
+        board: CharacterBoard
+    ): List<List<CharacterBoard.Coordinate>> =
+        group.map { it + vector }
+            .map {
+                when (board[it]?.content) {
+                    '.', '#', '@', 'O' -> listOf(it)
+                    '[' -> listOf(it, it + Movement.RIGHT.vector)
+                    ']' -> listOf(it, it + Movement.LEFT.vector)
+                    else -> throw IllegalArgumentException("Unknown content '${board[it]?.content}'!")
+                }
             }
-        return actedBoard.swap(base, target)
-    }
-
-    private fun possibleWhole(board: CharacterBoard): Boolean = when (board[target]!!.content) {
-        '#' -> false
-        '.' -> true
-        else -> children(board).all { it.possibleWhole(board) }
-    }
-
-    private fun possibleInPlace(board: CharacterBoard): Boolean = board[target]!!.content == '.'
-
-    private fun children(board: CharacterBoard): List<SwapAttempt> = when (board[base]!!.content) {
-        '.', '#' -> listOf()
-        '@', 'O' -> listOf(ahead())
-        '[' -> listOf(ahead(), ahead(CharacterBoard.Coordinate(1, 0)))
-        ']' -> listOf(ahead(), ahead(CharacterBoard.Coordinate(-1, 0)))
-        else -> throw IllegalArgumentException("Unknown content '${board[base]!!.content}'!")
-    }
-
-    private fun ahead(displacement: CharacterBoard.Coordinate = CharacterBoard.Coordinate(0, 0)): SwapAttempt =
-        SwapAttempt(target + displacement, vector)
 }
 
 enum class Movement(val vector: CharacterBoard.Coordinate) {
