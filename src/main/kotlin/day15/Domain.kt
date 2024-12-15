@@ -7,6 +7,7 @@ class Warehouse(
     val movements: List<Movement>
 ) {
     fun gpsSum(): Int = generateSequence(this) { it.performNextMove() }
+        .onEach { println("Moving: ${it.movements.firstOrNull()}");it.board.print();println() }
         .last()
         .board
         .allTiles
@@ -17,25 +18,10 @@ class Warehouse(
         tile.coords.x + ((board.dimensions.second - tile.coords.y - 1) * 100)
 
     private fun performNextMove(): Warehouse? {
-        val direction = movements.firstOrNull()?.direction ?: return null
+        val direction = movements.firstOrNull()?.vector ?: return null
         val robot = board.allTiles.first { it.content == '@' }.coords
-        val nextBoard = push(robot, direction)
+        val nextBoard = SwapAttempt(robot, direction).perform(board)
         return Warehouse(nextBoard, movements.drop(1))
-    }
-
-    private fun push(
-        currentPosition: CharacterBoard.Coordinate,
-        direction: CharacterBoard.Coordinate
-    ): CharacterBoard {
-        val nextPosition = currentPosition + direction
-        val nextTile = board[nextPosition]!!
-        val clearPushability = listOf('#', '.').contains(nextTile.content)
-        val actedBoard = if (clearPushability) board else push(nextPosition, direction)
-        val actedTile = actedBoard[nextPosition]!!
-        return when (actedTile.content) {
-            '.' -> actedBoard.swap(currentPosition, nextPosition)
-            else -> actedBoard
-        }
     }
 
     companion object {
@@ -65,21 +51,58 @@ class Warehouse(
             return parse(doubleBoardLines.plus(restLines))
         }
     }
+}
 
-    enum class Movement(val direction: CharacterBoard.Coordinate) {
-        UP(CharacterBoard.Coordinate(0, 1)),
-        DOWN(CharacterBoard.Coordinate(0, -1)),
-        LEFT(CharacterBoard.Coordinate(-1, 0)),
-        RIGHT(CharacterBoard.Coordinate(1, 0));
+class SwapAttempt(
+    val base: CharacterBoard.Coordinate,
+    val vector: CharacterBoard.Coordinate
+) {
+    private val target: CharacterBoard.Coordinate = base + vector
 
-        companion object {
-            fun parse(char: Char): Movement = when (char) {
-                '^' -> UP
-                'v' -> DOWN
-                '<' -> LEFT
-                '>' -> RIGHT
-                else -> throw IllegalArgumentException("Can't parse movement '$char'!")
+    fun perform(board: CharacterBoard): CharacterBoard = if (possibleWhole(board)) swap(board) else board
+
+    private fun swap(board: CharacterBoard): CharacterBoard {
+        val actedBoard =
+            if (possibleInPlace(board)) board
+            else children(board).fold(board) { childBoard, childSwap ->
+                childSwap.swap(childBoard)
             }
+        return actedBoard.swap(base, target)
+    }
+
+    private fun possibleWhole(board: CharacterBoard): Boolean = when (board[target]!!.content) {
+        '#' -> false
+        '.' -> true
+        else -> children(board).all { it.possibleWhole(board) }
+    }
+
+    private fun possibleInPlace(board: CharacterBoard): Boolean = board[target]!!.content == '.'
+
+    private fun children(board: CharacterBoard): List<SwapAttempt> = when (board[base]!!.content) {
+        '.', '#' -> listOf()
+        '@', 'O' -> listOf(ahead())
+        '[' -> listOf(ahead(), ahead(CharacterBoard.Coordinate(1, 0)))
+        ']' -> listOf(ahead(), ahead(CharacterBoard.Coordinate(-1, 0)))
+        else -> throw IllegalArgumentException("Unknown content '${board[base]!!.content}'!")
+    }
+
+    private fun ahead(displacement: CharacterBoard.Coordinate = CharacterBoard.Coordinate(0, 0)): SwapAttempt =
+        SwapAttempt(target + displacement, vector)
+}
+
+enum class Movement(val vector: CharacterBoard.Coordinate) {
+    UP(CharacterBoard.Coordinate(0, 1)),
+    DOWN(CharacterBoard.Coordinate(0, -1)),
+    LEFT(CharacterBoard.Coordinate(-1, 0)),
+    RIGHT(CharacterBoard.Coordinate(1, 0));
+
+    companion object {
+        fun parse(char: Char): Movement = when (char) {
+            '^' -> UP
+            'v' -> DOWN
+            '<' -> LEFT
+            '>' -> RIGHT
+            else -> throw IllegalArgumentException("Can't parse movement '$char'!")
         }
     }
 }
