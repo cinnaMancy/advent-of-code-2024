@@ -41,6 +41,18 @@ class Test {
         v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^
     """.trimIndent().lines()
 
+    private val input3 = """
+        #######
+        #...#.#
+        #.....#
+        #..OO@#
+        #..O..#
+        #.....#
+        #######
+
+        <vv<<^^<<^^
+    """.trimIndent().lines()
+
     @Test
     fun part1Example() {
         val warehouse1 = Warehouse.parse(input1)
@@ -49,5 +61,12 @@ class Test {
         val gpsSum2 = warehouse2.gpsSum()
         assertEquals(2028, gpsSum1)
         assertEquals(10092, gpsSum2)
+    }
+
+    @Test
+    fun part2Example() {
+        val warehouse3 = Warehouse.parseBig(input3)
+        val gpsSum3 = warehouse3.gpsSum()
+        assertEquals(9021, gpsSum3)
     }
 }

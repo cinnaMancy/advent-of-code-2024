@@ -10,7 +10,7 @@ class Warehouse(
         .last()
         .board
         .allTiles
-        .filter { it.content == 'O' }
+        .filter { listOf('O', '[').contains(it.content) }
         .sumOf { gpsScore(it) }
 
     private fun gpsScore(tile: CharacterBoard.Tile): Int =
@@ -29,9 +29,8 @@ class Warehouse(
     ): CharacterBoard {
         val nextPosition = currentPosition + direction
         val nextTile = board[nextPosition]!!
-        val actedBoard =
-            if (!listOf('#', '.').contains(nextTile.content)) push(nextPosition, direction)
-            else board
+        val clearPushability = listOf('#', '.').contains(nextTile.content)
+        val actedBoard = if (clearPushability) board else push(nextPosition, direction)
         val actedTile = actedBoard[nextPosition]!!
         return when (actedTile.content) {
             '.' -> actedBoard.swap(currentPosition, nextPosition)
@@ -49,22 +48,38 @@ class Warehouse(
                 movements = movementText.map { Movement.parse(it) }
             )
         }
+
+        fun parseBig(lines: List<String>): Warehouse {
+            val lineBreak = lines.indexOfFirst { it == "" }
+            val boardLines = lines.subList(0, lineBreak)
+            val restLines = lines.subList(lineBreak, lines.size)
+            val doubleBoardLines = boardLines.map { line ->
+                line.map { char ->
+                    when (char) {
+                        'O' -> "[]"
+                        '@' -> "@."
+                        else -> "$char$char"
+                    }
+                }.joinToString("")
+            }
+            return parse(doubleBoardLines.plus(restLines))
+        }
     }
-}
 
-enum class Movement(val direction: CharacterBoard.Coordinate) {
-    UP(CharacterBoard.Coordinate(0, 1)),
-    DOWN(CharacterBoard.Coordinate(0, -1)),
-    LEFT(CharacterBoard.Coordinate(-1, 0)),
-    RIGHT(CharacterBoard.Coordinate(1, 0));
+    enum class Movement(val direction: CharacterBoard.Coordinate) {
+        UP(CharacterBoard.Coordinate(0, 1)),
+        DOWN(CharacterBoard.Coordinate(0, -1)),
+        LEFT(CharacterBoard.Coordinate(-1, 0)),
+        RIGHT(CharacterBoard.Coordinate(1, 0));
 
-    companion object {
-        fun parse(char: Char): Movement = when (char) {
-            '^' -> UP
-            'v' -> DOWN
-            '<' -> LEFT
-            '>' -> RIGHT
-            else -> throw IllegalArgumentException("Can't parse movement '$char'!")
+        companion object {
+            fun parse(char: Char): Movement = when (char) {
+                '^' -> UP
+                'v' -> DOWN
+                '<' -> LEFT
+                '>' -> RIGHT
+                else -> throw IllegalArgumentException("Can't parse movement '$char'!")
+            }
         }
     }
 }
