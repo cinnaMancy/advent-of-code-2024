@@ -65,8 +65,8 @@ class Test {
 
     @Test
     fun part2Example() {
-        val warehouse3 = Warehouse.parseBig(input3)
-        val gpsSum3 = warehouse3.gpsSum()
-        assertEquals(9021, gpsSum3)
+        val bigWarehouse2 = Warehouse.parseBig(input2)
+        val gpsSum2 = bigWarehouse2.gpsSum()
+        assertEquals(9021, gpsSum2)
     }
 }

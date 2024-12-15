@@ -7,7 +7,8 @@ class Warehouse(
     val movements: List<Movement>
 ) {
     fun gpsSum(): Int = generateSequence(this) { it.performNextMove() }
-        .onEach { println("Moving: ${it.movements.firstOrNull()}");it.board.print();println() }
+        //  TODO: Remove me
+//        .onEach { println("Moving: ${it.movements.firstOrNull()}");it.board.print();println() }
         .last()
         .board
         .allTiles
@@ -105,13 +106,17 @@ class PushAttempt(
     ): List<List<CharacterBoard.Coordinate>> =
         group.map { it + vector }
             .map {
+                //  TODO: Separate out
                 when (board[it]?.content) {
                     '.', '#', '@', 'O' -> listOf(it)
-                    '[' -> listOf(it, it + Movement.RIGHT.vector)
-                    ']' -> listOf(it, it + Movement.LEFT.vector)
+                    '[' -> listOf(it + Movement.RIGHT.vector, it)
+                    ']' -> listOf(it + Movement.LEFT.vector, it)
                     else -> throw IllegalArgumentException("Unknown content '${board[it]?.content}'!")
                 }
             }
+            .distinctBy { it.toSet() }
+            //  TODO: Separate out - current group is not picked up
+            .filter { it.none { newGroupElement -> group.any { groupElement -> groupElement == newGroupElement } } }
 }
 
 enum class Movement(val vector: CharacterBoard.Coordinate) {
