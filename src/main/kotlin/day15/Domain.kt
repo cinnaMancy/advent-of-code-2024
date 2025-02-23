@@ -1,6 +1,8 @@
 package day15
 
 import util.CharacterBoard
+import util.Coordinate
+import util.Tile
 
 class Warehouse(
     val board: CharacterBoard,
@@ -15,7 +17,7 @@ class Warehouse(
         .filter { listOf('O', '[').contains(it.content) }
         .sumOf { gpsScore(it) }
 
-    private fun gpsScore(tile: CharacterBoard.Tile): Int =
+    private fun gpsScore(tile: Tile): Int =
         tile.coords.x + ((board.dimensions.second - tile.coords.y - 1) * 100)
 
     private fun performNextMove(): Warehouse? {
@@ -55,8 +57,8 @@ class Warehouse(
 }
 
 class PushAttempt(
-    val group: List<CharacterBoard.Coordinate>,
-    val vector: CharacterBoard.Coordinate
+    val group: List<Coordinate>,
+    val vector: Coordinate
 ) {
     //  TODO: Validate if correct
     //   1. if !possible() return board
@@ -90,20 +92,20 @@ class PushAttempt(
         }
     }
 
-    private fun allSpaces(coordinates: List<CharacterBoard.Coordinate>, board: CharacterBoard): Boolean =
+    private fun allSpaces(coordinates: List<Coordinate>, board: CharacterBoard): Boolean =
         coordinates.all { coordinate -> board[coordinate]?.content == '.' }
 
-    private fun anyWalls(coordinates: List<CharacterBoard.Coordinate>, board: CharacterBoard): Boolean =
+    private fun anyWalls(coordinates: List<Coordinate>, board: CharacterBoard): Boolean =
         coordinates.any { coordinate -> board[coordinate]?.content == '#' }
 
-    private fun move(group: List<CharacterBoard.Coordinate>, board: CharacterBoard): CharacterBoard =
+    private fun move(group: List<Coordinate>, board: CharacterBoard): CharacterBoard =
         group.fold(board) { currentBoard, cell ->
             currentBoard.swap(cell, cell + vector)
         }
 
     private fun groupsAhead(
         board: CharacterBoard
-    ): List<List<CharacterBoard.Coordinate>> =
+    ): List<List<Coordinate>> =
         group.map { it + vector }
             .map {
                 //  TODO: Separate out
@@ -119,11 +121,11 @@ class PushAttempt(
             .filter { it.none { newGroupElement -> group.any { groupElement -> groupElement == newGroupElement } } }
 }
 
-enum class Movement(val vector: CharacterBoard.Coordinate) {
-    UP(CharacterBoard.Coordinate(0, 1)),
-    DOWN(CharacterBoard.Coordinate(0, -1)),
-    LEFT(CharacterBoard.Coordinate(-1, 0)),
-    RIGHT(CharacterBoard.Coordinate(1, 0));
+enum class Movement(val vector: Coordinate) {
+    UP(Coordinate(0, 1)),
+    DOWN(Coordinate(0, -1)),
+    LEFT(Coordinate(-1, 0)),
+    RIGHT(Coordinate(1, 0));
 
     companion object {
         fun parse(char: Char): Movement = when (char) {

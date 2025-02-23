@@ -1,6 +1,7 @@
 package day8
 
 import util.CharacterBoard
+import util.Tile
 
 class Antinodes(
     val board: CharacterBoard
@@ -20,11 +21,11 @@ class Antinodes(
             .distinct()
             .count()
 
-    private fun allFrequencyPairVariations(): Sequence<Pair<CharacterBoard.Tile, CharacterBoard.Tile>> =
+    private fun allFrequencyPairVariations(): Sequence<Pair<Tile, Tile>> =
         board.allTiles
             .asSequence()
             .filter { tile -> tile.content != '.' }
-            .groupBy(CharacterBoard.Tile::content)
+            .groupBy(Tile::content)
             .asSequence()
             .flatMap { (_, groupOfTiles) -> allPairVariations(groupOfTiles) }
 

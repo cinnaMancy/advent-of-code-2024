@@ -1,6 +1,8 @@
 package day12
 
 import util.CharacterBoard
+import util.Coordinate
+import util.Tile
 
 class Garden(
     val board: CharacterBoard
@@ -8,14 +10,14 @@ class Garden(
     fun totalFencingCost() = regions().sumOf(::fencingCost)
     fun totalBulkFencingCost(): Int = regions().sumOf(::bulkFencingCost)
 
-    private fun regions(): List<List<CharacterBoard.Tile>> =
-        generateSequence(Pair(listOf<List<CharacterBoard.Tile>>(), board.allTiles)) { (regions, remaining) ->
+    private fun regions(): List<List<Tile>> =
+        generateSequence(Pair(listOf<List<Tile>>(), board.allTiles)) { (regions, remaining) ->
             val firstOfNextRegion = remaining.firstOrNull() ?: return@generateSequence null
             val nextRegion = fillRegion(firstOfNextRegion)
             return@generateSequence Pair(regions.plus(element = nextRegion), remaining.minus(nextRegion))
         }.last().first
 
-    private fun fillRegion(tile: CharacterBoard.Tile): List<CharacterBoard.Tile> =
+    private fun fillRegion(tile: Tile): List<Tile> =
         generateSequence(listOf(tile)) { tiles ->
             val next = tiles.flatMap { board.directlyAdjacent(it.coords) }
                 .distinct()
@@ -25,18 +27,18 @@ class Garden(
             else tiles.plus(next)
         }.last()
 
-    private fun fencingCost(region: List<CharacterBoard.Tile>) = area(region) * perimeter(region)
+    private fun fencingCost(region: List<Tile>) = area(region) * perimeter(region)
 
     //  Note: No. of corners == No. of sides
-    private fun bulkFencingCost(region: List<CharacterBoard.Tile>) = area(region) * corners(region)
+    private fun bulkFencingCost(region: List<Tile>) = area(region) * corners(region)
 
-    private fun area(region: List<CharacterBoard.Tile>): Int = region.size
+    private fun area(region: List<Tile>): Int = region.size
 
-    private fun perimeter(region: List<CharacterBoard.Tile>): Int =
+    private fun perimeter(region: List<Tile>): Int =
         region.map { tile -> board.directlyAdjacent(tile.coords).filter { adjacent -> region.contains(adjacent) } }
             .sumOf { 4 - it.size }
 
-    private fun corners(region: List<CharacterBoard.Tile>): Int =
+    private fun corners(region: List<Tile>): Int =
         region.flatMap { tile -> gradientsAndSaddles(tile.coords, region) }
             .distinctBy { (current, diagonal) ->
                 //  Saddle points should be counted twice!
@@ -47,17 +49,17 @@ class Garden(
             .count()
 
     private fun adjacentPair(
-        current: CharacterBoard.Coordinate,
-        diagonal: CharacterBoard.Coordinate
+        current: Coordinate,
+        diagonal: Coordinate
     ) = Pair(
-        CharacterBoard.Coordinate(current.x, diagonal.y),
-        CharacterBoard.Coordinate(diagonal.x, current.y)
+        Coordinate(current.x, diagonal.y),
+        Coordinate(diagonal.x, current.y)
     )
 
     private fun gradientsAndSaddles(
-        current: CharacterBoard.Coordinate,
-        region: List<CharacterBoard.Tile>
-    ): List<Pair<CharacterBoard.Coordinate, CharacterBoard.Coordinate>> {
+        current: Coordinate,
+        region: List<Tile>
+    ): List<Pair<Coordinate, Coordinate>> {
         val adjacents = board.directlyAdjacentCoordinates(current)
         val diagonals = board.adjacentCoordinates(current).minus(adjacents)
         return diagonals.map { diagonal ->
@@ -80,9 +82,9 @@ class Garden(
     //  These corners will also be picked up as B, C pairs, so take care in finding the unique ones!
     //  Also, this doesn't include saddle points!
     private fun isGradient(
-        region: List<CharacterBoard.Tile>,
-        currentAndDiagonal: Pair<CharacterBoard.Coordinate, CharacterBoard.Coordinate>,
-        twoAdjacent: Pair<CharacterBoard.Coordinate, CharacterBoard.Coordinate>
+        region: List<Tile>,
+        currentAndDiagonal: Pair<Coordinate, Coordinate>,
+        twoAdjacent: Pair<Coordinate, Coordinate>
     ) = ((currentAndDiagonal.first.isPartOf(region) == currentAndDiagonal.second.isPartOf(region))
             != (twoAdjacent.first.isPartOf(region) == twoAdjacent.second.isPartOf(region)))
 
@@ -94,15 +96,15 @@ class Garden(
     //  (A && D && !C && !B)
     //  These points will have to be counted twice unlike regular gradient points!
     private fun isSaddle(
-        region: List<CharacterBoard.Tile>,
-        currentAndDiagonal: Pair<CharacterBoard.Coordinate, CharacterBoard.Coordinate>,
-        twoAdjacent: Pair<CharacterBoard.Coordinate, CharacterBoard.Coordinate>
+        region: List<Tile>,
+        currentAndDiagonal: Pair<Coordinate, Coordinate>,
+        twoAdjacent: Pair<Coordinate, Coordinate>
     ) = currentAndDiagonal.toList().plus(twoAdjacent.toList()).all { board[it] != null }
             && currentAndDiagonal.toList().all { it.isPartOf(region) }
             && twoAdjacent.toList().all { !it.isPartOf(region) }
 
-    private fun CharacterBoard.Coordinate.isPartOf(region: List<CharacterBoard.Tile>): Boolean =
-        region.map(CharacterBoard.Tile::coords).contains(this)
+    private fun Coordinate.isPartOf(region: List<Tile>): Boolean =
+        region.map(Tile::coords).contains(this)
 
     companion object {
         fun parse(lines: List<String>): Garden = Garden(CharacterBoard.parse(lines))
